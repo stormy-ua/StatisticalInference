@@ -6,7 +6,7 @@ output:
 ---
 ## Overview
 
-Let's investigate the exponential distribution and validate the Central Limit Theorem on it. The exponential distribution has a rate parameter. I will use rate parameter equal to 0.2 and will assign it to the `lambda` variable. The mean of exponential distribution is `1/lambda` and the standard deviation is also `1/lambda`. In addition to `lambda` we need to define a variable for the theoretical mean and standard deviation:
+Let's investigate the exponential distribution and validate the Central Limit Theorem on it. The exponential distribution has a rate parameter. I will use rate parameter equal to 0.2 and will assign it to the `lambda` variable. The mean of exponential distribution is `1/lambda` and the standard deviation is also `1/lambda`. In addition to `lambda` we need to define variables for the theoretical mean and standard deviation:
 
 ```{r}
 lambda <- 0.2
@@ -36,7 +36,7 @@ simulation.data_matrix <- matrix(simulation.data_raw, ncol = n)
 
 The first visualization will be the samples values distribution. It just shows that we are really dealing with the exponential distribution:
 
-```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
+```{r, echo = FALSE, fig.width=6, fig.height = 3.5}
 library(ggplot2)
 ggplot(data = data.frame(x = simulation.data_raw), aes(x = x, y = ..density..)) + 
     geom_histogram(binwidth = 0.7, color = "black", fill = "orange") +
@@ -48,7 +48,7 @@ ggplot(data = data.frame(x = simulation.data_raw), aes(x = x, y = ..density..)) 
 
 In the following simulation we can observe how sample mean approaches theoretical mean as number of observations increases. The red dotted line is the theoretical mean (`lambda`).
 
-```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
+```{r, echo = FALSE, fig.width=6, fig.height = 3.5}
 nmeans <- 10000
 means <- cumsum(rexp(nmeans, lambda)) / (1  : nmeans)
 ggplot(data.frame(x = 1 : nmeans, y = means), aes(x = x, y = y)) + 
@@ -66,7 +66,7 @@ simulation.means <- apply(simulation.data_matrix, 1, mean)
 
 Now we can plot a histogram of sample means. The red dotted vertical line corresponds to the theoretical mean `1/lambda`.
 
-```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
+```{r, echo = FALSE, fig.width=6, fig.height = 3.5}
 # plot a distribution of a large collection of averages
 ggplot(data = data.frame(x = simulation.means), aes(x = x)) + 
     geom_histogram(binwidth = 0.1, color = "black", fill = "orange",  aes(y = ..density..)) +
@@ -91,7 +91,7 @@ theoretical.var <- theoretical.sd**2
 The plot below demonstrates that sample variance approaches to the theoretical variance as number of observation increases:
 
 
-```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
+```{r, echo = FALSE, fig.width=6, fig.height = 3.5}
 nvars <- 10000
 randoms <- rexp(nvars, lambda)
 vars <- sapply(2:nvars, function(i) var(randoms[1:i]))
@@ -112,7 +112,7 @@ simulation.vars <- apply(simulation.data_matrix, 1, var)
 Now we can plot a histogram of sample variances. The red dotted vertical line corresponds to the theoretical variance `(1/lambda)**2`.
 
 
-```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
+```{r, echo = FALSE, fig.width=6, fig.height = 3.5}
 # plot a distribution of a large collection of averages
 ggplot(data = data.frame(x = simulation.vars), aes(x = x)) + 
     geom_histogram(binwidth = 1.5, color = "black", fill = "orange",  aes(y = ..density..)) +
@@ -135,7 +135,7 @@ theoretical.means_sd <- theoretical.sd/sqrt(n)
 
 Let's double check this assumption on the exponential distribution. The blue line corresponds to the normal distribution with the parameters `theoretical.mean` and `theoretical.sd/sqrt(n)`. The red dotted line shows the theoretical mean of the normal distribution.
 
-```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
+```{r, echo = FALSE, fig.width=6, fig.height = 3.5}
 ggplot(data = data.frame(x = simulation.means), aes(x = x)) + 
     geom_histogram(binwidth = 0.1, color = "black", fill = "orange",  aes(y = ..density..)) +
     stat_function(fun = dnorm, size = 2, color = "blue", args = list(mean = theoretical.mean, sd = theoretical.means_sd)) +
@@ -152,7 +152,7 @@ norm <- function(x, n) sqrt(n) * (mean(x) - theoretical.mean) / theoretical.sd
 
 Since the sample mean is normalized its distribution should converge to the standard normal distribution. The blue lines correspind to the standard normal distributions on the following plots:
 
-```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
+```{r, echo = FALSE, fig.width=7, fig.height = 5}
 dat <- data.frame(
     x = c(apply(matrix(rexp(10 * nsim, lambda), nsim), 1, norm, 5),
           apply(matrix(rexp(20 * nsim, lambda), nsim), 1, norm, 15),
@@ -164,7 +164,7 @@ g <- g + stat_function(fun = dnorm, size = 2)
 g + facet_grid(. ~ size)
 ```
 
-Based on the figures above we can deduct that CLT works on practise even for relatively small number of observations.
+Based on the figures above and the exponential distribution plotted at the beggining we can deduct that CLT works on practise even for relatively small number of observations. Note that for small number of observation the distribution of means is close to the exponential distribution itself.
 
 
 
