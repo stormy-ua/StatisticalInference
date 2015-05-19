@@ -1,0 +1,62 @@
+---
+title: "CLT theorem via exponential distribution"
+author: "Kirill Panarin"
+output: html_document
+---
+## Overview
+
+Let's investigate the exponential distribution and compare the application of the Central Limit Theorem on it. The exponential distribution has a rate parameter. I will use rate parameter equal to 0.2 and will assign it to the `lambda` variable. The mean of exponential distribution is `1/lambda` and the standard deviation is also `1/lambda`. In addition to `lambda` we need to define a variable for the theoretical mean and standard deviation:
+
+```{r}
+lambda <- 0.2
+theoretical.mean <- 1/lambda
+theoretical.sd <- 1/lambda
+```
+
+## Simulations
+
+The simulation process has the following structure:
+- Generate `n` random values.
+- Repeat the first procedure for `nsim` number of times in order to gather a reasonable amount of data for analysis.
+
+I will use the following values for `n` and `nsim` parameters:
+
+```{r}
+n <- 40
+nsim <- 1000
+```
+
+Let's start simulations from generating `n` times `nsim` random values with the exponential distribution. `simulation.data_raw` contains the array of random values and `simulation.data_matrix` contains the same data but restructured as a matrix with `n` columns:
+
+```{r}
+simulation.data_raw <- rexp(n * nsim, lambda)
+simulation.data_matrix <- matrix(simulation.data_raw, ncol = n)
+```
+
+The first visualization will be the samples values distribution. It just shows that we are really dealing with the exponential distribution:
+
+```{r, echo = FALSE}
+library(ggplot2)
+ggplot(data = data.frame(x = simulation.data_raw), aes(x = x, y = ..density..)) + 
+    geom_histogram(binwidth = 0.7, color = "black", fill = "orange") +
+    geom_density(lwd = 1) +
+    ggtitle("Distribution of random exponentials")
+```
+
+
+```{r, echo = FALSE, fig.width=9, fig.height = 6, fig.align='center'}
+nosim <- 1000
+cfunc <- function(x, n) sqrt(n) * (mean(x) - theoretical.mean) / theoretical.sd
+dat <- data.frame(
+  x = c(apply(matrix(sample(0:1, prob = c(.1,.9), nosim * 10, replace = TRUE), 
+                     nosim), 1, cfunc, 10),
+        apply(matrix(sample(0:1, prob = c(.1,.9), nosim * 20, replace = TRUE), 
+                     nosim), 1, cfunc, 20),
+        apply(matrix(sample(0:1, prob = c(.1,.9), nosim * n, replace = TRUE), 
+                     nosim), 1, cfunc, 30)
+        ),
+  size = factor(rep(c(10, 20, n), rep(nosim, 3))))
+g <- ggplot(dat, aes(x = x, fill = size)) + geom_histogram(binwidth=.3, colour = "black", aes(y = ..density..)) 
+g <- g + stat_function(fun = dnorm, size = 2)
+g + facet_grid(. ~ size)
+```
