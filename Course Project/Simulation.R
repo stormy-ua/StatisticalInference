@@ -17,6 +17,35 @@ ggplot(data = data.frame(x = rexp(n * nsim, lambda)), aes(x = x, y = ..density..
     scale_x_continuous(limits = c(0, 25)) +
     ggtitle("Distribution of random exponentials")
 
+
+nvars <- 10000
+randoms <- rexp(nvars, lambda)
+vars <- sapply(1:nvars, function(i) var(randoms[1:i]))
+ggplot(data.frame(x = 1 : nvars, y = vars), aes(x = x, y = y)) + 
+   geom_hline(yintercept = theoretical.sd**2, linetype = "dotted", color = "red", lwd = 1) +
+   geom_line(size = 2) +
+   scale_y_continuous(breaks = seq(10, 30, 5)) +
+   labs(x = "Number of observations", y = "Variance") +
+   ggtitle("Sample variance vs. theoretical variance")
+
+
+# sample mean vs. theoretical mean
+nmeans <- 5000
+means <- cumsum(rexp(nmeans, lambda)) / (1  : nmeans)
+ggplot(data.frame(x = 1 : nmeans, y = means), aes(x = x, y = y)) + 
+    geom_hline(yintercept = theoretical.mean, linetype = "dotted", color = "red", lwd = 1) +
+    geom_line(size = 2) +
+    labs(x = "Number of observations", y = "Mean") +
+    ggtitle("Sample mean vs. theoretical mean")
+
+ggplot(data = data.frame(x = simulation.means), aes(x = x)) + 
+    geom_histogram(binwidth = 0.1, color = "black", fill = "orange",  aes(y = ..density..)) +
+    stat_function(fun = dnorm, size = 1) +
+    #scale_x_continuous(limits = c(2, 8.5), breaks = 0:10) +
+    geom_vline(xintercept = theoretical.mean, linetype = "dotted", color = "red", lwd = 2) +
+    ggtitle("Distribution of random exponentials averages")
+
+
 # plot a distribution of a large collection of averages
 ggplot(data = data.frame(x = (simulation.means - theoretical.mean)/(theoretical.sd/sqrt(n))), aes(x = x)) + 
     geom_histogram(binwidth = 0.1, color = "black", fill = "orange",  aes(y = ..density..)) +

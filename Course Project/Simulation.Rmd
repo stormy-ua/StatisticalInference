@@ -1,11 +1,12 @@
 ---
 title: "CLT theorem via exponential distribution"
 author: "Kirill Panarin"
-output: html_document
+output:
+  pdf_document: default
 ---
 ## Overview
 
-Let's investigate the exponential distribution and compare the application of the Central Limit Theorem on it. The exponential distribution has a rate parameter. I will use rate parameter equal to 0.2 and will assign it to the `lambda` variable. The mean of exponential distribution is `1/lambda` and the standard deviation is also `1/lambda`. In addition to `lambda` we need to define a variable for the theoretical mean and standard deviation:
+Let's investigate the exponential distribution and validate the Central Limit Theorem on it. The exponential distribution has a rate parameter. I will use rate parameter equal to 0.2 and will assign it to the `lambda` variable. The mean of exponential distribution is `1/lambda` and the standard deviation is also `1/lambda`. In addition to `lambda` we need to define a variable for the theoretical mean and standard deviation:
 
 ```{r}
 lambda <- 0.2
@@ -35,7 +36,7 @@ simulation.data_matrix <- matrix(simulation.data_raw, ncol = n)
 
 The first visualization will be the samples values distribution. It just shows that we are really dealing with the exponential distribution:
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
 library(ggplot2)
 ggplot(data = data.frame(x = simulation.data_raw), aes(x = x, y = ..density..)) + 
     geom_histogram(binwidth = 0.7, color = "black", fill = "orange") +
@@ -43,20 +44,128 @@ ggplot(data = data.frame(x = simulation.data_raw), aes(x = x, y = ..density..)) 
     ggtitle("Distribution of random exponentials")
 ```
 
+### Sample Mean vs. Theoretical Mean
 
-```{r, echo = FALSE, fig.width=9, fig.height = 6, fig.align='center'}
-nosim <- 1000
-cfunc <- function(x, n) sqrt(n) * (mean(x) - theoretical.mean) / theoretical.sd
+In the following simulation we can observe how sample mean approaches theoretical mean as number of observations increases. The red dotted line is the theoretical mean (`lambda`).
+
+```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
+nmeans <- 10000
+means <- cumsum(rexp(nmeans, lambda)) / (1  : nmeans)
+ggplot(data.frame(x = 1 : nmeans, y = means), aes(x = x, y = y)) + 
+    geom_hline(yintercept = theoretical.mean, linetype = "dotted", color = "red", lwd = 1) +
+    geom_line(size = 2) +
+    labs(x = "Number of observations", y = "Mean") +
+    ggtitle("Sample mean vs. theoretical mean")
+```
+
+Let's calculate sample means and store the result array in the `simulation.means` variable:
+
+```{r}
+simulation.means <- apply(simulation.data_matrix, 1, mean)
+```
+
+Now we can plot a histogram of sample means. The red dotted vertical line corresponds to the theoretical mean `1/lambda`.
+
+```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
+# plot a distribution of a large collection of averages
+ggplot(data = data.frame(x = simulation.means), aes(x = x)) + 
+    geom_histogram(binwidth = 0.1, color = "black", fill = "orange",  aes(y = ..density..)) +
+    scale_x_continuous(breaks = 0:10) +
+    geom_density(lwd = 1) +
+    geom_vline(xintercept = theoretical.mean, linetype = "dotted", color = "red", lwd = 2) +
+    labs(x = "Sample mean", y = "Density") +
+    ggtitle("Distribution of random exponentials averages (n = 40)")
+```
+
+It's apparent from figures that sample mean approaches to `theoretical.mean` as number of observations `n` increases.
+
+
+### Sample Variance vs. Theoretical Variance
+
+We can do the same simulations for sample variance as we did for sample mean. The theoretical variance is the square of the theoretical standard deviation:
+
+```{r}
+theoretical.var <- theoretical.sd**2
+```
+
+The plot below demonstrates that sample variance approaches to the theoretical variance as number of observation increases:
+
+
+```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
+nvars <- 10000
+randoms <- rexp(nvars, lambda)
+vars <- sapply(2:nvars, function(i) var(randoms[1:i]))
+ggplot(data.frame(x = 2 : nvars, y = vars), aes(x = x, y = y)) + 
+   geom_hline(yintercept = theoretical.var, linetype = "dotted", color = "red", lwd = 1) +
+   geom_line(size = 2) +
+   scale_y_continuous(breaks = seq(25, 50, 25)) +
+   labs(x = "Number of observations", y = "Variance") +
+   ggtitle("Sample variance vs. theoretical variance")
+```
+
+Let's calculate sample variances and store the result array in the `simulation.vars` variable:
+
+```{r}
+simulation.vars <- apply(simulation.data_matrix, 1, var)
+```
+
+Now we can plot a histogram of sample variances. The red dotted vertical line corresponds to the theoretical variance `(1/lambda)**2`.
+
+
+```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
+# plot a distribution of a large collection of averages
+ggplot(data = data.frame(x = simulation.vars), aes(x = x)) + 
+    geom_histogram(binwidth = 1.5, color = "black", fill = "orange",  aes(y = ..density..)) +
+    scale_x_continuous(breaks = seq(0, 75, 5)) +
+    geom_density(lwd = 1) +
+    geom_vline(xintercept = theoretical.var, linetype = "dotted", color = "red", lwd = 2) +
+    labs(x = "Sample variance", y = "Density") +
+    ggtitle("Distribution of random exponentials variances (n = 40)")
+```
+
+It's apparent from figures that sample variance approaches to `theoretical.var` as number of observations `n` increases.
+
+### Distribution
+
+Central Limit Theorem says that as number of observation increases the sample average becomes normally distributed with the expected value equal to `theoretical.mean` and the following standard deviation:
+
+```{r}
+theoretical.means_sd <- theoretical.sd/sqrt(n)
+```
+
+Let's double check this assumption on the exponential distribution. The blue line corresponds to the normal distribution with the parameters `theoretical.mean` and `theoretical.sd/sqrt(n)`. The red dotted line shows the theoretical mean of the normal distribution.
+
+```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
+ggplot(data = data.frame(x = simulation.means), aes(x = x)) + 
+    geom_histogram(binwidth = 0.1, color = "black", fill = "orange",  aes(y = ..density..)) +
+    stat_function(fun = dnorm, size = 2, color = "blue", args = list(mean = theoretical.mean, sd = theoretical.means_sd)) +
+    #scale_x_continuous(limits = c(2, 8.5), breaks = 0:10) +
+    geom_vline(xintercept = theoretical.mean, linetype = "dotted", color = "red", lwd = 2) +
+    ggtitle("Distribution of random exponentials averages (n = 40)")
+```
+
+Let's also plot sample mean distributions for three numbers of observations: 5, 15 and 40. In this case sample mean is normalized using the following formula:
+
+```{r}
+norm <- function(x, n) sqrt(n) * (mean(x) - theoretical.mean) / theoretical.sd
+```
+
+Since the sample mean is normalized its distribution should converge to the standard normal distribution. The blue lines correspind to the standard normal distributions on the following plots:
+
+```{r, echo = FALSE, fig.width=7, fig.height = 4.5, fig.align='center'}
 dat <- data.frame(
-  x = c(apply(matrix(sample(0:1, prob = c(.1,.9), nosim * 10, replace = TRUE), 
-                     nosim), 1, cfunc, 10),
-        apply(matrix(sample(0:1, prob = c(.1,.9), nosim * 20, replace = TRUE), 
-                     nosim), 1, cfunc, 20),
-        apply(matrix(sample(0:1, prob = c(.1,.9), nosim * n, replace = TRUE), 
-                     nosim), 1, cfunc, 30)
-        ),
-  size = factor(rep(c(10, 20, n), rep(nosim, 3))))
+    x = c(apply(matrix(rexp(10 * nsim, lambda), nsim), 1, norm, 5),
+          apply(matrix(rexp(20 * nsim, lambda), nsim), 1, norm, 15),
+          apply(matrix(rexp(n * nsim, lambda), nsim), 1, norm, n)
+    ),
+    size = factor(rep(c(10, 20, n), rep(nsim, 3))))
 g <- ggplot(dat, aes(x = x, fill = size)) + geom_histogram(binwidth=.3, colour = "black", aes(y = ..density..)) 
 g <- g + stat_function(fun = dnorm, size = 2)
 g + facet_grid(. ~ size)
 ```
+
+Based on the figures above we can deduct that CLT works on practise even for relatively small number of observations.
+
+
+
+
