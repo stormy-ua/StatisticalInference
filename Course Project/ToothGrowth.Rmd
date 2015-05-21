@@ -60,7 +60,8 @@ First, let's apply t-statistics for length by supplement type for each dose:
 
 ```{r}
 stat_by_supp <- sapply(unique(ToothGrowth$dose), function(d) {
-    stat <- t.test(len ~ supp, paired = F, var.equal = F, data = ToothGrowth[ToothGrowth$dose == d,])
+    stat <- t.test(len ~ supp, paired = F, var.equal = F, 
+                   data = ToothGrowth[ToothGrowth$dose == d,])
     stat$dose <- as.character(d)
     stat$conf.int_min <- stat$conf.int[1]
     stat$conf.int_max <- stat$conf.int[2]
@@ -79,7 +80,8 @@ In this case we have more analysis permutation than in the case with comparison 
 dose_combn <- combn(as.character(unique(ToothGrowth$dose)), 2)
 statf <- function(st, f, s) {
     dose_pair <- c(f, s) 
-    stat <- t.test(len ~ dose, paired = F, var.equal = F, data = ToothGrowth[ToothGrowth$dose %in% dose_pair & ToothGrowth$supp == st,])
+    stat <- t.test(len ~ dose, paired = F, var.equal = F, 
+                   data = ToothGrowth[ToothGrowth$dose %in% dose_pair & ToothGrowth$supp == st,])
     stat$conf.int_min <- stat$conf.int[1]
     stat$conf.int_max <- stat$conf.int[2]    
     stat$dose.first <- dose_pair[1]   
@@ -98,7 +100,8 @@ As we can see for doses as dose increases from 0.5 to 1 and 2 t-statistic is big
 There are three combinations of doses. Let's run t-statistics for all three combinations in case when we are dealing with VC supplement type:
 
 ```{r}
-stat_by_dose_vc <- mapply(function(f, s) statf("VC", f, s), dose_combn[1, ], dose_combn[2, ])
+stat_by_dose_vc <- mapply(function(f, s) statf("VC", f, s), 
+                          dose_combn[1, ], dose_combn[2, ])
 colnames(stat_by_dose_vc) <- c()
 t(stat_by_dose_vc)[, c(12, 13, 1:3, 10, 11)]
 ```
