@@ -1,0 +1,57 @@
+---
+title: "Guinea pig's tooth growth analysis"
+author: "Kirill Panarin"
+output:
+  html_document: default
+  pdf_document: default
+---
+## Overview
+
+The response is the length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods (orange juice or ascorbic acid).
+
+ToothGrowth data set contains 3 variables:
+
+- **len**: tooth length, numeric
+- **supp**: supplement type (VC or OJ), factor
+- **dose**: dose in milligrams, numeric
+
+## Exploratory analysis
+
+Let's load ToothGrowth data set and display structure of it:
+
+```{r}
+data(ToothGrowth)
+str(ToothGrowth)
+summary(ToothGrowth)
+head(ToothGrowth)
+```
+
+So we have a data set with 60 observations of 3 variables. It will be better to convert `dose` variable from numeric to factor:
+
+```{r}
+ToothGrowth$dose <-as.factor(ToothGrowth$dose)
+```
+
+Let's plot how `len` is distributed for different `supp` and `dose` in order to highlight some basic features of the data:
+
+```{r, echo = FALSE, fig.width=7, fig.height = 4.5}
+library(ggplot2)
+ggplot(ToothGrowth) +
+    geom_histogram(binwidth = 1, aes(x = len, fill = supp)) + 
+    facet_grid(dose ~ supp)
+```
+
+Base on the figure above we can assume that as dose increases the chances to get higher tooth length become higher. In addition to this, we can see that VC supplement type is more effective that OJ. 
+
+## Tooth growth by supp and dose comparison
+
+First, let's apply t-statistics for length by supplement type for each dose:
+
+```{r}
+t.test(len ~ supp, paired = F, data = ToothGrowth[ToothGrowth$dose == 0.5,])
+t.test(len ~ supp, paired = F, data = ToothGrowth[ToothGrowth$dose == 1,])
+t.test(len ~ supp, paired = F, data = ToothGrowth[ToothGrowth$dose == 2,])
+```
+
+We can see that for dose 2 the confidence interval contains zero and p-value is big, so we can't accept a hypothesis that the supplement type affects tooth growth rate for dose equal to 2. In contrast, for doses 0.5 and 1 the t confidence interval does contain zero so we can asuume a hypothesis that the supplement type affects tooth growth rate for doses 0.5 and 1.
+
